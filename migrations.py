@@ -76,8 +76,12 @@ def execute_migrations():
         user=os.environ['DB_USER'],
         password=os.environ['DB_PASSWORD']
     )
-    create_tables(conn)
+    try:
+        create_tables(conn)
+    except Exception as e:
+        print("Ocorreu um erro ao executar as migrations: " + str(e))
     conn.close()
+    print("Migrations executadas com sucesso")
 
 if __name__ == "__main__":
     main()
