@@ -2,6 +2,16 @@ import psycopg2
 from psycopg2 import sql
 import os
 
+
+def connection():
+    return psycopg2.connect(
+        host=os.environ['DB_HOST'],
+        database=os.environ['DB_NAME'],
+        user=os.environ['DB_USER'],
+        password=os.environ['DB_PASSWORD']
+    )
+
+
 def create_tables(conn):
     """ create tables in the PostgreSQL database"""
     commands = (
@@ -18,7 +28,8 @@ def create_tables(conn):
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             description VARCHAR(255),
-            frequency VARCHAR(100),
+            category VARCHAR(100),
+            frequency JSONB,
             start_date DATE,
             target_date DATE,
             user_id INTEGER,
@@ -37,7 +48,7 @@ def create_tables(conn):
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             description VARCHAR(255),
-            frequency VARCHAR(100),
+            frequency JSONB,
             start_date DATE,
             target_date DATE,
             user_id INTEGER,
@@ -69,13 +80,33 @@ def create_tables(conn):
     cur.close()
     conn.commit()
 
+def delete_all_tables():
+    print("Deletando tabelas!")
+    conn = connection()
+    cur = conn.cursor()
+
+    # Selecionar todas as tabelas
+    cur.execute("""
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = 'public'
+    """)
+
+    tables = cur.fetchall()
+
+    # Deletar todas as tabelas
+    for table in tables:
+        cur.execute(f"DROP TABLE IF EXISTS {table[0]} CASCADE")
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+
 def execute_migrations():
-    conn = psycopg2.connect(
-        host=os.environ['DB_HOST'],
-        database=os.environ['DB_NAME'],
-        user=os.environ['DB_USER'],
-        password=os.environ['DB_PASSWORD']
-    )
+
+    conn = connection()
     try:
         create_tables(conn)
     except Exception as e:
