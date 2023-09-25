@@ -28,7 +28,6 @@ def create_user_endpoint():
 
     try:
         user_id = repository.create_user(username, password, email)
-        conn.close()
         return jsonify({"message": "User created successfully", "user_id": user_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -48,7 +47,6 @@ def create_review_template_endpoint():
     
     try:
         template_id = repository.create_review_template(description, period)
-        conn.close()
         return jsonify({"message": "Review template created successfully", "template_id": template_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -72,7 +70,6 @@ def create_task_endpoint():
 
     try:
         task_id = repository.create_task(name, description, frequency, start_date, target_date, user_id)
-        conn.close()
         return jsonify({"message": "Task created successfully", "task_id": task_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -92,7 +89,6 @@ def create_review_endpoint():
 
     try:
         review_id = repository.create_review(review_template_id, review_date)
-        conn.close()
         return jsonify({"message": "Review created successfully", "review_id": review_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -114,7 +110,6 @@ def create_pomodoro_endpoint():
 
     try:
         pomodoro_id = repository.create_pomodoro(duration, date, quantity, user_id)
-        conn.close()
         return jsonify({"message": "Pomodoro created successfully", "pomodoro_id": pomodoro_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
