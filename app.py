@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 import migrations
 import repository
 
@@ -6,7 +6,7 @@ import repository
 app = Flask(__name__)
 
 migrations.execute_migrations()
-
+# migrations.delete_all_tables()
 
 PREFIX = "/quick-routine"
 
@@ -14,6 +14,7 @@ print("As seguintes tabelas foram encontradas:" + str(repository.get_all_tables(
 
 
 # CREATE Operations ENDPOINT
+
 
 @app.route(PREFIX + '/create_user', methods=["POST"])
 def create_user_endpoint():
@@ -26,12 +27,14 @@ def create_user_endpoint():
     if not all([username, password, email]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    try:
-        user_id = repository.create_user(username, password, email)
-        return jsonify({"message": "User created successfully", "user_id": user_id}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+    if not repository.user_exists(username, email):
+        try:
+            user_id = repository.create_user(username, password, email)
+            return jsonify({"message": "User created successfully", "user_id": user_id}), 201
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"message": "User already created"}), 409
 
 @app.route(PREFIX + '/create_review_template', methods=["POST"])
 def create_review_template_endpoint():

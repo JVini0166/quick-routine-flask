@@ -106,6 +106,27 @@ def create_pomodoro(duration, date, quantity, user_id):
 
 # CREATE Operations END
 
+# VALIDATION Operations
+
+
+def user_exists(username, email):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    check_query = """
+        SELECT id FROM users WHERE username = %s OR email = %s;
+    """
+    cursor.execute(check_query, (username, email))
+    existing_user = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return True if existing_user else False
+
+
+# VALIDATIONS Operations END
+
 def get_all_tables():
 
     connection = get_connection()
