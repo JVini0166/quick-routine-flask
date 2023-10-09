@@ -20,6 +20,8 @@ def create_tables(conn):
             id SERIAL PRIMARY KEY,
             username VARCHAR(100) NOT NULL,
             password VARCHAR(100) NOT NULL,
+            name VARCHAR(100),
+            surname VARCHAR(100),
             email VARCHAR(100) NOT NULL
         )
         """,
@@ -28,10 +30,10 @@ def create_tables(conn):
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             description VARCHAR(255),
-            category VARCHAR(100),
-            frequency JSONB,
+            frequency JSON,
             start_date DATE,
             target_date DATE,
+            icon INTEGER,
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
@@ -40,7 +42,9 @@ def create_tables(conn):
         CREATE TABLE IF NOT EXISTS review_template (
             id SERIAL PRIMARY KEY,
             description VARCHAR(255),
-            period JSONB
+            period JSON,
+            user_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users (id)
         )
         """,
         """
@@ -48,9 +52,11 @@ def create_tables(conn):
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             description VARCHAR(255),
-            frequency JSONB,
+            recurrent BOOLEAN,
+            frequency JSON,
             start_date DATE,
             target_date DATE,
+            icon INTEGER,
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
@@ -60,13 +66,16 @@ def create_tables(conn):
             id SERIAL PRIMARY KEY,
             review_template_id INTEGER,
             review_date DATE,
-            FOREIGN KEY (review_template_id) REFERENCES review_template (id)
+            user_id INTEGER,
+            FOREIGN KEY (review_template_id) REFERENCES review_template (id),
+            FOREIGN KEY (user_id) REFERENCES users (id)
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS pomodoro (
             id SERIAL PRIMARY KEY,
-            duration INTEGER,
+            start_time TIME,
+            end_time TIME,
             date DATE,
             quantity INTEGER,
             user_id INTEGER,
@@ -79,6 +88,7 @@ def create_tables(conn):
         cur.execute(command)
     cur.close()
     conn.commit()
+
 
 def delete_all_tables():
     print("Deletando tabelas!")
