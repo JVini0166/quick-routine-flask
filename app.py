@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 import migrations
 import repository
-
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, headers='Content-Type')
 
 migrations.execute_migrations()
 # migrations.delete_all_tables()
@@ -16,25 +17,31 @@ print("As seguintes tabelas foram encontradas:" + str(repository.get_all_tables(
 # CREATE Operations ENDPOINT
 
 
-@app.route(PREFIX + '/create_user', methods=["POST"])
+@app.route(PREFIX + '/create_user', methods=["POST, OPTIONS"])
 def create_user_endpoint():
     data = request.json
-    
+
+    # Extract data
     username = data.get('username')
     password = data.get('password')
     email = data.get('email')
 
+    # Validate required fields
     if not all([username, password, email]):
-        return jsonify({"error": "Missing required fields"}), 400
+        return jsonify({"message": "Missing required fields"}), 400
 
-    if not repository.user_exists(username, email):
-        try:
-            user_id = repository.create_user(username, password, email)
-            return jsonify({"message": "User created successfully", "user_id": user_id}), 201
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    else:
+    # Check if user exists
+    if repository.user_exists(username, email):
         return jsonify({"message": "User already created"}), 409
+
+    # Create user
+    try:
+        user_id = repository.create_user(username, password, email)
+        return jsonify({"message": "User created successfully", "user_id": user_id}), 201
+    except Exception as e:
+        return jsonify({"message": f"Error creating user: {str(e)}"}), 500
+
+
 
 @app.route(PREFIX + '/create_review_template', methods=["POST"])
 def create_review_template_endpoint():
