@@ -17,7 +17,7 @@ print("As seguintes tabelas foram encontradas:" + str(repository.get_all_tables(
 # CREATE Operations ENDPOINT
 
 
-@app.route(PREFIX + '/create_user', methods=["POST, OPTIONS"])
+@app.route(PREFIX + '/create_user', methods=["POST"])
 def create_user_endpoint():
     data = request.json
 
