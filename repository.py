@@ -1,5 +1,7 @@
 import psycopg2
 import os
+import bcrypt
+
 
 def get_connection():
     conn = psycopg2.connect(
@@ -13,14 +15,20 @@ def get_connection():
 
 # CREATE Operations
 
+
+
 def create_user(username, password, email):
     conn = get_connection()
     cursor = conn.cursor()
+
+    # Criptografar a senha usando bcrypt
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     query = """
         INSERT INTO users (username, password, email)
         VALUES (%s, %s, %s) RETURNING id;
     """
-    cursor.execute(query, (username, password, email))
+    cursor.execute(query, (username, hashed_password, email))
     user_id = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
@@ -28,14 +36,36 @@ def create_user(username, password, email):
     return user_id
 
 
-def create_habit(name, description, category, frequency, start_date, target_date, user_id):
+def check_password(username, password):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT password FROM users WHERE username = %s;
+    """
+    cursor.execute(query, (username,))
+    result = cursor.fetchone()
+
+    if result:
+        stored_hashed_password = result[0]
+        # Verifique se a senha inserida corresponde ao hash armazenado
+        if bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
+            return True
+
+    cursor.close()
+    conn.close()
+    return False
+
+
+
+def create_habit(name, description, category, frequency, status, start_date, target_date, user_id):
     conn = get_connection()
     cursor = conn.cursor()
     query = """
-        INSERT INTO habits (name, description, category, frequency, start_date, target_date, user_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id;
+        INSERT INTO habits (name, description, category, frequency, status, start_date, target_date, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;
     """
-    cursor.execute(query, (name, description, category, frequency, start_date, target_date, user_id))
+    cursor.execute(query, (name, description, category, frequency, status, start_date, target_date, user_id))
     habit_id = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
@@ -142,6 +172,22 @@ def get_all_tables():
     result = cursor.fetchall()
 
     return result
+
+# GET Operations
+
+def get_habits_by_user_id(user_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = """
+        SELECT id, name, description, category, frequency, start_date, target_date
+        FROM habits
+        WHERE user_id = %s;
+    """
+    cursor.execute(query, (user_id,))
+    habits = cursor.fetchall()
+    conn.close()
+    return habits
+
 
 if __name__ == "__main__":
     main()

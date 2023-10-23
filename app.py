@@ -42,6 +42,25 @@ def create_user_endpoint():
         return jsonify({"message": f"Error creating user: {str(e)}"}), 500
 
 
+@app.route(PREFIX + '/login', methods=["POST"])
+def login_endpoint():
+    data = request.json
+
+    # Extract data
+    username = data.get('username')
+    password = data.get('password')
+
+    # Validate required fields
+    if not all([username, password]):
+        return jsonify({"message": "Missing required fields"}), 400
+
+    # Verify user credentials
+    if repository.check_password(username, password):
+        # Aqui você pode gerar e retornar um token ou qualquer outra lógica de autenticação.
+        return jsonify({"message": "Login successful"}), 200
+    else:
+        return jsonify({"message": "Invalid credentials"}), 401
+
 
 @app.route(PREFIX + '/create_review_template', methods=["POST"])
 def create_review_template_endpoint():
@@ -125,7 +144,57 @@ def create_pomodoro_endpoint():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route(PREFIX + '/create_habit', methods=["POST"])
+def create_habit_endpoint():
+    data = request.json
+
+    # Extract data
+    name = data.get('name')
+    description = data.get('description')
+    category = data.get('category')
+    frequency = data.get('frequency')
+    status = data.get('status')
+    start_date = data.get('start_date')
+    target_date = data.get('target_date')
+    user_id = data.get('user_id')
+
+    # Validate required fields
+    if not all([name, category, frequency, status, start_date, target_date, user_id]):
+        return jsonify({"message": "Missing required fields"}), 400
+
+    # Ensure that start_date and target_date are in valid format
+    # Here, I'm assuming they are in the format YYYY-MM-DD. Adjust accordingly.
+    try:
+        datetime.strptime(start_date, '%Y-%m-%d')
+        datetime.strptime(target_date, '%Y-%m-%d')
+    except ValueError:
+        return jsonify({"message": "Invalid date format. Expected YYYY-MM-DD"}), 400
+
+    # Create habit
+    try:
+        habit_id = repository.create_habit(name, description, category, frequency, status, start_date, target_date, user_id)
+        return jsonify({"message": "Habit created successfully", "habit_id": habit_id}), 201
+    except Exception as e:
+        return jsonify({"message": f"Error creating habit: {str(e)}"}), 500
+
 # CREATE Operations ENDPOINT END
+
+# GET Operations ENDPOINT START
+
+@app.route(PREFIX + '/get_habits', methods=["GET"])
+def get_habits_endpoint():
+    user_id = request.args.get('user_id')
+    
+    if not user_id:
+        return jsonify({"message": "Missing user_id parameter"}), 400
+    
+    try:
+        habits = repository.get_habits_by_user_id(user_id)
+        return jsonify({"habits": habits}), 200
+    except Exception as e:
+        return jsonify({"message": f"Error fetching habits: {str(e)}"}), 500
+
+# GET Operations ENDPOINT END
 
 
 

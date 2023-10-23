@@ -19,7 +19,7 @@ def create_tables(conn):
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(100) NOT NULL,
-            password VARCHAR(100) NOT NULL,
+            password VARCHAR(500) NOT NULL,
             name VARCHAR(100),
             surname VARCHAR(100),
             email VARCHAR(100) NOT NULL
