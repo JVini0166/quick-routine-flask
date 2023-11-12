@@ -20,6 +20,8 @@ def create_tables(conn):
             id SERIAL PRIMARY KEY,
             username VARCHAR(100) NOT NULL,
             password TEXT NOT NULL,
+            name VARCHAR(100),
+            surname VARCHAR(100),
             email VARCHAR(150),
             login_method VARCHAR(100),
             community JSON

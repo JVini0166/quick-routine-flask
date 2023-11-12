@@ -17,7 +17,7 @@ def get_connection():
 
 
 
-def create_user(username, password, email):
+def create_user(username, password, name, surname, email, login_method):
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -25,16 +25,46 @@ def create_user(username, password, email):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     query = """
-        INSERT INTO user_info (username, password, email)
-        VALUES (%s, %s, %s) RETURNING id;
+        INSERT INTO user_info (username, password, name, surname, email, login_method)
+        VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
     """
-    cursor.execute(query, (username, hashed_password, email))
+    cursor.execute(query, (username, hashed_password, name, surname, email, login_method))
     user_id = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
     conn.close()
     return user_id
 
+
+
+def get_user_info(username):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT id, username, email, name, surname, login_method, community 
+        FROM user_info 
+        WHERE username = %s;
+    """
+    cursor.execute(query, (username,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if result:
+        user_data = {
+            "id": result[0],
+            "username": result[1],
+            "email": result[2],
+            "name": result[3],
+            "surname": result[4],
+            "login_method": result[5],
+            "community": result[6]
+        }
+        return user_data
+    else:
+        return None
 
 def check_password(username, password):
     conn = get_connection()

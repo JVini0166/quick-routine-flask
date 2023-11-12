@@ -10,9 +10,12 @@ CORS(app, headers='Content-Type')
 app.config['JWT_SECRET_KEY'] = 'e6N67Z1VBeIl'
 jwt = JWTManager(app)
 
+def recreate_database():
+    migrations.delete_all_tables()
+    migrations.execute_migrations()
 
 migrations.execute_migrations()
-# migrations.delete_all_tables()
+# recreate_database()
 
 PREFIX = "/quick-routine"
 
@@ -29,10 +32,13 @@ def create_user_endpoint():
     # Extract data
     username = data.get('username')
     password = data.get('password')
+    name = data.get('name')
+    surname = data.get('surname')
     email = data.get('email')
+    login_method = data.get('login_method')
 
     # Validate required fields
-    if not all([username, password, email]):
+    if not all([username, password, name, surname, email, login_method]):
         return jsonify({"message": "Missing required fields"}), 400
 
     # Check if user exists
@@ -41,7 +47,7 @@ def create_user_endpoint():
 
     # Create user
     try:
-        user_id = repository.create_user(username, password, email)
+        user_id = repository.create_user(username, password, name, surname, email, login_method)
         return jsonify({"message": "User created successfully", "user_id": user_id}), 201
     except Exception as e:
         return jsonify({"message": f"Error creating user: {str(e)}"}), 500
@@ -50,8 +56,6 @@ def create_user_endpoint():
 @app.route(PREFIX + '/login', methods=["POST"])
 def login_endpoint():
     data = request.json
-
-    # Extract data
     username = data.get('username')
     password = data.get('password')
 
@@ -61,11 +65,12 @@ def login_endpoint():
 
     # Verify user credentials
     if repository.check_password(username, password):
-        username = request.json.get('username', None)
-        password = request.json.get('password', None)
-        # Valide as credenciais aqui
-        access_token = create_access_token(identity=username)
-        return jsonify(access_token=access_token), 200
+        user_info = repository.get_user_info(username)
+        if user_info:
+            access_token = create_access_token(identity=username)
+            return jsonify(access_token=access_token, user_info=user_info), 200
+        else:
+            return jsonify({"message": "User not found"}), 404
     else:
         return jsonify({"message": "Invalid credentials"}), 401
 
@@ -76,7 +81,7 @@ def token_verify_endpoint():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
-    
+
 
 @app.route(PREFIX + '/create_review_template', methods=["POST"])
 def create_review_template_endpoint():
