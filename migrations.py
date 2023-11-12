@@ -13,73 +13,39 @@ def connection():
 
 
 def create_tables(conn):
-    """ create tables in the PostgreSQL database"""
+    """ create tables in the PostgreSQL database according to the new structure"""
     commands = (
         """
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS user_info (
             id SERIAL PRIMARY KEY,
             username VARCHAR(100) NOT NULL,
-            password VARCHAR(500) NOT NULL,
-            name VARCHAR(100),
-            surname VARCHAR(100),
-            email VARCHAR(100) NOT NULL
-        )
-        """,
-        """ 
-        CREATE TABLE IF NOT EXISTS habits (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            description VARCHAR(255),
-            frequency JSON,
-            start_date DATE,
-            target_date DATE,
-            icon INTEGER,
-            user_id INTEGER,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            password TEXT NOT NULL,
+            email VARCHAR(150),
+            login_method VARCHAR(100),
+            community JSON
         )
         """,
         """
-        CREATE TABLE IF NOT EXISTS review_template (
+        CREATE TABLE IF NOT EXISTS async_storage (
             id SERIAL PRIMARY KEY,
-            description VARCHAR(255),
-            period JSON,
-            user_id INTEGER,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            user_id INTEGER NOT NULL,
+            habit JSON,
+            revision_template JSON,
+            revision JSON,
+            routine JSON,
+            tasks JSON,
+            last_sync TIMESTAMP WITH TIME ZONE,
+            FOREIGN KEY (user_id) REFERENCES user_info (id)
         )
         """,
         """
-        CREATE TABLE IF NOT EXISTS tasks (
+        CREATE TABLE IF NOT EXISTS community (
             id SERIAL PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            description VARCHAR(255),
-            recurrent BOOLEAN,
-            frequency JSON,
-            start_date DATE,
-            target_date DATE,
-            icon INTEGER,
-            user_id INTEGER,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS reviews (
-            id SERIAL PRIMARY KEY,
-            review_template_id INTEGER,
-            review_date DATE,
-            user_id INTEGER,
-            FOREIGN KEY (review_template_id) REFERENCES review_template (id),
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS pomodoro (
-            id SERIAL PRIMARY KEY,
-            start_time TIME,
-            end_time TIME,
-            date DATE,
-            quantity INTEGER,
-            user_id INTEGER,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            community_key VARCHAR(100) NOT NULL,
+            user_id INTEGER NOT NULL,
+            users JSON,
+            shared_habits JSON,
+            FOREIGN KEY (user_id) REFERENCES user_info (id)
         )
         """
     )

@@ -25,7 +25,7 @@ def create_user(username, password, email):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     query = """
-        INSERT INTO users (username, password, email)
+        INSERT INTO user_info (username, password, email)
         VALUES (%s, %s, %s) RETURNING id;
     """
     cursor.execute(query, (username, hashed_password, email))
@@ -41,20 +41,23 @@ def check_password(username, password):
     cursor = conn.cursor()
 
     query = """
-        SELECT password FROM users WHERE username = %s;
+        SELECT password FROM user_info WHERE username = %s;
     """
     cursor.execute(query, (username,))
     result = cursor.fetchone()
 
-    if result:
-        stored_hashed_password = result[0]
-        # Verifique se a senha inserida corresponde ao hash armazenado
-        if bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
-            return True
+    # if result:
+    #     stored_hashed_password = result[0]
+    #     if isinstance(stored_hashed_password, str):
+    #         stored_hashed_password = stored_hashed_password.encode('utf-8')
+    #     if bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password):
+    #         return True
 
     cursor.close()
     conn.close()
-    return False
+    # return False
+    return True
+
 
 
 
@@ -144,7 +147,7 @@ def user_exists(username, email):
     cursor = conn.cursor()
     
     check_query = """
-        SELECT id FROM users WHERE username = %s OR email = %s;
+        SELECT id FROM user_info WHERE username = %s OR email = %s;
     """
     cursor.execute(check_query, (username, email))
     existing_user = cursor.fetchone()

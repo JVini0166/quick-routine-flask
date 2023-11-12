@@ -2,9 +2,14 @@ from flask import Flask, request, jsonify
 import migrations
 import repository
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+
 
 app = Flask(__name__)
 CORS(app, headers='Content-Type')
+app.config['JWT_SECRET_KEY'] = 'e6N67Z1VBeIl'
+jwt = JWTManager(app)
+
 
 migrations.execute_migrations()
 # migrations.delete_all_tables()
@@ -56,11 +61,22 @@ def login_endpoint():
 
     # Verify user credentials
     if repository.check_password(username, password):
-        # Aqui você pode gerar e retornar um token ou qualquer outra lógica de autenticação.
-        return jsonify({"message": "Login successful"}), 200
+        username = request.json.get('username', None)
+        password = request.json.get('password', None)
+        # Valide as credenciais aqui
+        access_token = create_access_token(identity=username)
+        return jsonify(access_token=access_token), 200
     else:
         return jsonify({"message": "Invalid credentials"}), 401
 
+
+@app.route(PREFIX + '/token-verify', methods=["GET"])
+@jwt_required()
+def token_verify_endpoint():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+    
 
 @app.route(PREFIX + '/create_review_template', methods=["POST"])
 def create_review_template_endpoint():
